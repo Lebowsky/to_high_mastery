@@ -1,3 +1,4 @@
+import functools
 import math
 import operator
 import reprlib
@@ -27,7 +28,11 @@ class Vector:
                 bytes(self._components))
 
     def __eq__(self, other):
-        return tuple(self) == tuple(other)
+        return len(self) == len(other) and all(a == b for a, b in zip(self, other))
+
+    def __hash__(self):
+        hashes = (hash(x) for x in self._components)
+        return functools.reduce(operator.xor, hashes, 0)
 
     def __abs__(self):
         return math.hypot(*self)
