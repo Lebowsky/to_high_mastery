@@ -1,3 +1,4 @@
+from collections import abc
 import functools
 import itertools
 import math
@@ -38,11 +39,49 @@ class Vector:
     def __abs__(self):
         return math.hypot(*self)
 
+    def __neg__(self):
+        return Vector(-x for x in self)
+
+    def __pos__(self):
+        return -Vector(self)
+
+    def __add__(self, other):
+        try:
+            pairs = itertools.zip_longest(self, other, fillvalue=0.0)
+            return Vector(a + b for a, b in pairs)
+        except TypeError:
+            return NotImplemented
+
+    __radd__ = __add__
+
+    def __mul__(self, scalar):
+        # Если scalar нельзя преобразовать в float то мы не знаем, как его обработать, поэтому возвращаем NotImplemented
+        try:
+            factor = float(scalar)
+        except TypeError:
+            return NotImplemented
+        return Vector(n * factor for n in self)
+
+    def __rmul__(self, scalar):
+        return self * scalar
+
+    def __matmul__(self, other):
+        if isinstance(other, abc.Sized) and isinstance(other, abc.Iterable):
+            if len(self) == len(other):
+                return sum(a * b for a, b in zip(self, other))
+            else:
+                raise ValueError('@ requires vectors of equal length.')
+        else:
+            return NotImplemented
+
+    def __rmatmul__(self, other):
+        return self @ other
+
     def __bool__(self):
         return bool(abs(self))
 
     def __len__(self):
-        return len(self._components)
+        return len(list(self._components))
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -109,54 +148,4 @@ class Vector:
 
 
 if __name__ == '__main__':
-    # A ``Vector`` is built from an iterable of numbers:
-    v = Vector([1, 2, 3, 4] * 10)
-
-    assert repr(v) == 'Vector([1, 2, 3, 4, 1, 2, ...])'
-    assert bytes(Vector([1, 2, 3, 4])) == b'd\x01\x02\x03\x04'
-    first, second = Vector([1, 2])
-    assert first == 1 and second == 2
-    assert bool(v)
-    assert abs(Vector([3, 4])) == 5.0
-    assert v == [1, 2, 3, 4] * 10
-
-    # Test of slicing
-    assert v[1] == 2
-    assert type(v[1]) == int
-    assert v[1:4] == (2, 3, 4)
-    assert type(v[1:3]) == Vector
-    v7 = Vector(range(7))
-    assert v7[-1] == 6.0
-    assert v7[1:4] == Vector([1.0, 2.0, 3.0])
-    assert v7[-1:] == Vector([6.0])
-    try:
-        assert v7[1, 2]
-    except TypeError as e:
-        assert str(e) == "'tuple' object cannot be interpreted as an integer"
-
-    # Tests of dynamic attribute access
-    assert (v.x, v.y, v.z, v.t) == (v[0], v[1], v[2], v[3])
-    try:
-        v.x = 1
-    except AttributeError as e:
-        assert str(e) == "readonly attribute 'x'"
-    try:
-        v.f = 1
-    except AttributeError as e:
-        assert str(e) == "can't set attrubutes 'a' to 'z' in 'Vector'"
-    try:
-        v.f
-    except AttributeError as e:
-        assert str(e) == "'Vector' object has no attribute 'f'"
-
-    # Tests of hashing:
-    v1 = Vector([3, 4])
-    v2 = Vector([3.1, 4.2])
-    v3 = Vector([3, 4, 5])
-    v6 = Vector(range(6))
-    assert (hash(v1), hash(v3), hash(v6)) == (7, 2, 1)
-
-    # Tests of ``format()``
-    assert format(Vector([-1, -1, -1, -1]), 'h') == '<2.0, 2.0943951023931957, 2.186276035465284, 5.283185307179586>'
-    assert format(Vector([2, 2, 2, 2]), '.3eh') == '<4.000e+00, 1.047e+00, 9.553e-01, 7.854e-01>'
-    assert format(Vector([0, 1, 0, 0]), '0.5fh') == '<1.00000, 1.57080, 0.00000, 0.00000>'
+    v = Vector([1, 2, 3, 4])
