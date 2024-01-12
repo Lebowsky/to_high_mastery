@@ -30,7 +30,10 @@ class Vector:
                 bytes(self._components))
 
     def __eq__(self, other):
-        return len(self) == len(other) and all(a == b for a, b in zip(self, other))
+        if isinstance(other, Vector):
+            return len(self) == len(other) and all(a == b for a, b in zip(self, other))
+        else:
+            return NotImplemented
 
     def __hash__(self):
         hashes = (hash(x) for x in self._components)

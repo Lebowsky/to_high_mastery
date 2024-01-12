@@ -13,7 +13,7 @@ def test_vector_can_built_from_an_iterable_of_numbers():
     assert first == 1 and second == 2
     assert bool(v)
     assert abs(Vector([3, 4])) == 5.0
-    assert v == [1, 2, 3, 4] * 10
+    assert v != [1, 2, 3, 4] * 10
 
 
 def test_vector_can_use_slicing():
@@ -22,8 +22,9 @@ def test_vector_can_use_slicing():
     v = Vector([1, 2, 3, 4] * 10)
 
     assert v[1] == 2
+    # with pytest.raises(TypeError):
     assert type(v[1]) == int
-    assert v[1:4] == (2, 3, 4)
+    assert v[1:4] != (2, 3, 4)
     assert type(v[1:3]) == Vector
 
     v7 = Vector(range(7))
@@ -88,8 +89,6 @@ def test_vector_can_concat():
     v1 = Vector([3, 4, 5])
     assert (10, 20, 30) + v1 == Vector((13, 24, 35))
 
-    v1 + 1
-
 
 def test_vector_can_multiply_on_scalar():
     v = Vector([1, 2, 3])
@@ -112,6 +111,18 @@ def test_vector_support_scalar_multiply():
         va @ 3
     except TypeError as e:
         assert type(e) is TypeError
+
+
+def test_vector_support_richcompare():
+    v1 = Vector([1, 2, 3])
+    v1_alias = v1
+    v1 += Vector([4, 5, 6])
+    assert v1 == Vector([5, 7, 9])
+    assert v1 is not v1_alias
+
+    v1 = Vector([1, 2, 3])
+    v1 *= 11
+    assert v1 == Vector([55, 77, 88])
 
 
 if __name__ == '__main__':
