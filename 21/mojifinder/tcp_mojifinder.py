@@ -2,7 +2,7 @@ import sys
 import asyncio
 from asyncio.trsock import TransportSocket
 import functools
-from typing import cast
+from typing import cast, Any, Callable
 
 from charindex import InvertedIndex
 
@@ -40,11 +40,20 @@ async def finder(index: InvertedIndex,
 async def search(query: str,
                  index: InvertedIndex,
                  writer: asyncio.StreamWriter) -> int:
-    pass
+    chars = index.search(query)
+    lines = (line.encode() + CRLF for line in chars)
+    writer.writelines(lines)
+    await writer.drain()
+    status_line = f'{"-" * 66} {len(chars)} found'
+    writer.write(status_line.encode() + CRLF)
+    await writer.drain()
+    return len(chars)
 
 
 async def supervisor(index: InvertedIndex, host: str, port: int):
-    server = await asyncio.start_server(functools.partial(finder, index), host, port)
+    server = await asyncio.start_server(cast(
+        functools.partial(finder, index), Callable),
+        host, port)
 
     socket_list = cast(tuple[TransportSocket, ...], server.sockets)
     addr = socket_list[0].getsockname()
