@@ -1,6 +1,6 @@
 import json
 import os
-from explore0 import FrozenJSON
+from explore2 import FrozenJSON
 
 
 def test_can_use_frozen_json_getattr():
